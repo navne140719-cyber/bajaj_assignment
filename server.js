@@ -1,10 +1,10 @@
+const dotenv = require("dotenv")
+dotenv.config();
 const express = require("express");
 const app = express();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const dotenv = require("dotenv")
-dotenv.config();
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 app.use(express.json());
 
@@ -56,11 +56,18 @@ app.post("/bfhl", async (req, res) => {
     }
 
     else if (body.hasOwnProperty("AI")) {
-      const prompt = body.AI;
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      data = response.text();
-    }
+      if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({
+      is_success: false,
+      error: "GEMINI_API_KEY not configured"
+    });
+  }
+
+  const prompt = body.AI;
+  const result = await model.generateContent(prompt);
+  data = result.response.text();
+}
+
 
     else {
       return res.status(400).json({ is_success: false });
@@ -72,10 +79,14 @@ app.post("/bfhl", async (req, res) => {
       data
     });
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ is_success: false });
-  }
+  }  catch (err) {
+  console.error("ERROR:", err);
+  res.status(500).json({
+    is_success: false,
+    error: err.message
+  });
+}
+
 });
 
 const PORT = process.env.PORT || 3000;
