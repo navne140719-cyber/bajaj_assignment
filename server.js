@@ -3,6 +3,8 @@ const app = express();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const dotenv = require("dotenv")
+dotenv.config();
 
 app.use(express.json());
 
@@ -32,46 +34,47 @@ app.post("/bfhl", async (req, res) => {
     const body = req.body;
     let data = null;
 
-    if (body.fibonacci !== undefined) {
+    if (body.hasOwnProperty("fibonacci")) {
       let n = body.fibonacci;
-      let fib = [0,1];
-      for (let i=2;i<n;i++){
-        fib[i] = fib[i-1] + fib[i-2];
+      let fib = [0, 1];
+      for (let i = 2; i < n; i++) {
+        fib[i] = fib[i - 1] + fib[i - 2];
       }
-      data = fib.slice(0,n);
+      data = fib.slice(0, n);
     }
 
-    else if (body.prime) {
+    else if (body.hasOwnProperty("prime")) {
       data = body.prime.filter(isPrime);
     }
 
-    else if (body.hcf) {
-      data = body.hcf.reduce((a,b)=>gcd(a,b));
+    else if (body.hasOwnProperty("hcf")) {
+      data = body.hcf.reduce((a, b) => gcd(a, b));
     }
 
-    else if (body.lcm) {
-      data = body.lcm.reduce((a,b)=>lcm(a,b));
+    else if (body.hasOwnProperty("lcm")) {
+      data = body.lcm.reduce((a, b) => lcm(a, b));
     }
 
-    else if (body.AI) {
+    else if (body.hasOwnProperty("AI")) {
       const prompt = body.AI;
       const result = await model.generateContent(prompt);
       const response = await result.response;
       data = response.text();
-}
+    }
 
     else {
-      return res.status(400).json({is_success:false});
+      return res.status(400).json({ is_success: false });
     }
 
     res.json({
-      is_success:true,
-      official_email:"navneet0833.be23@chitkara.edu.in",
-      data:data
+      is_success: true,
+      official_email: "navneet0833.be23@chitkara.edu.in",
+      data
     });
 
-  } catch {
-    res.status(500).json({is_success:false});
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ is_success: false });
   }
 });
 
