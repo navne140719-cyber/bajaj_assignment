@@ -1,5 +1,8 @@
 const express = require("express");
 const app = express();
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 app.use(express.json());
 
@@ -24,7 +27,7 @@ const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
 const lcm = (a, b) => (a * b) / gcd(a, b);
 
 // POST /bfhl
-app.post("/bfhl", (req, res) => {
+app.post("/bfhl", async (req, res) => {
   try {
     const body = req.body;
     let data = null;
@@ -51,9 +54,11 @@ app.post("/bfhl", (req, res) => {
     }
 
     else if (body.AI) {
-      // simple placeholder
-      data = "Mumbai";
-    }
+      const prompt = body.AI;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      data = response.text();
+}
 
     else {
       return res.status(400).json({is_success:false});
